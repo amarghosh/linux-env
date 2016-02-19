@@ -10,4 +10,6 @@ sudo apt-get install vim \
     build-essential \
     nodejs \
     p7zip-full \
-    p7zip-rar
+    p7zip-rar \
+    mysql-server \
+    python-pip
