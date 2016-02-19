@@ -1,6 +1,10 @@
 #/bin/bash
 
-# Install basic packages. Keep expanding this list
+# Install basic packages required for development
+# Keep adding new entries to this list
+
+# Read through the items once before running this.
+# Some of these may not be relevant for you
 
 sudo apt-get install vim \
     git-all \
@@ -12,4 +16,5 @@ sudo apt-get install vim \
     p7zip-full \
     p7zip-rar \
     mysql-server \
-    python-pip
+    python-pip \
+    ssh
