@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# find a file in pwd and start vi with it
+
+set -e
+
+if [ $# -eq 0 ]; then
+    echo No file specified
+    exit 1
+fi
+
+if [ $# -gt 1 ]; then
+    echo Multiple inputs received: $@
+    exit 1
+fi
+
+files=`find . -type f -iname "*$1*"`
+count=`echo $files | wc -w`
+
+if [ $count == "0" ]; then
+    echo No such file
+    exit 1
+fi
+
+if [ $count != "1" ]; then
+    echo Multiple files found: $count
+    i=1
+    for f in $files; do
+        echo "$i:   $f"
+        i=$(($i+1))
+    done
+    echo "Enter your choice (or an invalid input to cancel): "
+    read choice
+    re='^[0-9]+$'
+    if ! [[ $choice =~ $re ]]; then
+        exit 1
+    fi
+    if [ $choice -lt 1 -o $choice -gt $count ]; then
+        exit 1
+    fi
+    choice=$(($choice-1))
+    arr=($files)
+    file=${arr[$choice]}
+else
+    file=$files
+fi
+
+echo $file
+
+TTY=`tty`
+
+vi $file <$TTY >$TTY
+
