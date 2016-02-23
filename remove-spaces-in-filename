@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Replace spaces in file names with hyphens
+
+if [[ $# -gt 0 && -d $1 ]]; then
+    DIR=$1
+else
+    DIR=`pwd`
+fi
+
+files=`ls $DIR`
+IFS=$'\n'
+renamed=0
+ignored=0
+for f in $files; do
+    name_without_spaces=`echo $f | sed -r -e 's: +:-:g'`
+    if [ $f != $name_without_spaces ]; then
+        if [ -e $DIR/$name_without_spaces ]; then
+            echo "Ignoring \"$f\" as $name_without_spaces already exists"
+            ignored=$((ignored+1))
+        else
+            echo "mv \"$f\" $name_without_spaces"
+            mv "$f" $name_without_spaces
+            renamed=$((renamed+1))
+        fi
+    fi
+done
+
+echo "Renamed $renamed files and ignored $ignored files"
+
