@@ -13,8 +13,10 @@ sudo apt-get install vim \
     cscope \
     build-essential \
     nodejs \
+    tree \
     p7zip-full \
     p7zip-rar \
     mysql-server \
     python-pip \
+    default-jdk \
     ssh
