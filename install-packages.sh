@@ -19,4 +19,7 @@ sudo apt-get install vim \
     mysql-server \
     python-pip \
     default-jdk \
-    ssh
+    ssh \
+    dos2unix \
+    meld
+
