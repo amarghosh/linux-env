@@ -5,7 +5,8 @@
 export PS1="\W $ "
 
 alias ll='ls -l --color=tty'
-alias grep='grep --color=auto -iIn '
+alias lh='ls -lh --color=tty'
+alias grep='grep --color=auto -iInP '
 alias please=sudo
 alias cd..='cd ..'
 alias today='date +"%g%W.%u"'
