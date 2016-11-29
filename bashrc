@@ -9,7 +9,8 @@ alias lh='ls -lh --color=tty'
 alias grep='grep --color=auto -iInP '
 alias please=sudo
 alias cd..='cd ..'
-alias today='date +"%g%W.%u"'
+alias week='date +"%g%W.%u"'
+alias today='date +"%G_%m_%d"'
 alias now='date +%Y.%m.%d.%H.%M.%S'
 
 # delete all queues: use at your own risk
