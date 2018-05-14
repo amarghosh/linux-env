@@ -6,7 +6,8 @@ export PS1="\W $ "
 
 alias ll='ls -l --color=tty'
 alias lh='ls -lh --color=tty'
-alias grep='grep --color=auto -iInP '
+alias grep='grep -iIn --color'
+alias egrep='egrep -iIn --color'
 alias please=sudo
 alias cd..='cd ..'
 alias week='date +"%g%W.%u"'
@@ -23,14 +24,14 @@ export EDITOR=vi
 export GREP_COLOR='2;32'
 set -o vi
 
-export ANDROID_DEV_TOOLS=$HOME/android-devtools
-export ANDROID_SDK_ROOT="$ANDROID_DEV_TOOLS/adt-bundle-linux-x86-20140702"
-export ANDROID_NDK_ROOT="$ANDROID_DEV_TOOLS/android-ndk-r10e"
+if [ x$ANDROID_DEV_TOOLS != x ]; then
+    export ANDROID_SDK_ROOT="$ANDROID_DEV_TOOLS/adt-bundle-linux-x86-20140702"
+    export ANDROID_NDK_ROOT="$ANDROID_DEV_TOOLS/android-ndk-r10e"
+    alias android-studio='nohup $ANDROID_DEV_TOOLS/android-studio/bin/studio.sh &>/dev/null &'
+    export PATH="$ANDROID_SDK_ROOT/sdk/platform-tools:$ANDROID_NDK_ROOT:$PATH"
+    export PATH="$PATH:$ANDROID_NDK_ROOT/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86/bin"
+fi
 export PATH="$PATH:$HOME/bin"
-export PATH="$ANDROID_SDK_ROOT/sdk/platform-tools:$ANDROID_NDK_ROOT:$PATH"
-export PATH="$PATH:$ANDROID_NDK_ROOT/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86/bin"
-alias adt='nohup $ANDROID_SDK_ROOT/eclipse/eclipse &>/dev/null &'
-alias android-studio='nohup $ANDROID_DEV_TOOLS/android-studio/bin/studio.sh &>/dev/null &'
 
 chr() {
   [ "$1" -lt 256 ] || return 1
