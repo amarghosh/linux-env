@@ -3,8 +3,8 @@
 
 [alias]
 	lg1 = log --all --graph --oneline --decorate
-	lg2 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(bold white)%s %C(dim white)%ci %C(dim red)%an%C(bold green)%d%C(reset)'
-	lg4 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(bold white)%s %C(dim white)%ci %C(dim red)%cn%C(bold green)%d%C(reset)'
+	lg2 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(dim white)%ci %C(red)%an%C(bold green)%d%C(reset)'
+	lg4 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(dim white)%ci %C(red)%cn%C(bold green)%d%C(reset)'
 	lg3 = log --all --graph --decorate
 
 [push]
