@@ -2,10 +2,12 @@
 	ui = auto
 
 [alias]
+	graph = log --graph --oneline --decorate
+	amend-head = commit --amend -C HEAD
 	lg1 = log --all --graph --oneline --decorate
-	lg2 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(dim white)%ci %C(red)%an%C(bold green)%d%C(reset)'
+	lg2 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(white)%ci %C(red)%an%C(bold green)%d%C(reset)'
 	lg3 = log --all --graph --decorate
-	lg4 = log --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(dim white)%ci %C(red)%an%C(bold green)%d%C(reset)'
+	lg4 = log --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(white)%ci %C(red)%an%C(bold green)%d%C(reset)'
 
 [push]
 	default = simple
