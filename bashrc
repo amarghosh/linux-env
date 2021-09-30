@@ -4,8 +4,13 @@
 # Show only current directory
 export PS1="\W $ "
 
-alias ll='ls -l --color=tty'
-alias lh='ls -lh --color=tty'
+if [ `uname -s` == Darwin ]; then
+    alias ll='ls -l'
+    alias lh='ls -lh'
+else
+    alias ll='ls -l --color=tty'
+    alias lh='ls -lh --color=tty'
+fi
 alias grep='grep -iIn --color'
 alias egrep='egrep -iIn --color'
 alias please=sudo
