@@ -1,0 +1,162 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+BLACK='\033[0;30m'
+BOLD_BLACK='\033[1;30m'
+BLUE='\033[0;34m'
+BOLD_BLUE='\033[1;34m'
+COLOR_RESET='\033[0m'
+
+function find_files() {
+    args="$search_word"
+    [ $match_words == 1 ] && args="\b$search_word\b"
+    [ -z $exclude_file_pattern ] || args="--exclude $exclude_file_pattern $args"
+    [ -z $exclude_dir_pattern ] || args="--exclude-dir $exclude_dir_pattern $args"
+    egrep -r $args $base_dir | cut -d: -f1 | sort | uniq
+}
+
+function show_option_help() {
+    echo -e "${RED}
+y - Replace all changes in this line
+n - Skip this line
+a - Replace all changes in this file
+q - Quit
+? - Show this help
+$BLACK" >&2
+}
+
+function read_option() {
+    while true; do
+        read -p "$(echo -e ${BOLD_BLUE}Replace this line?$BLACK [${RED}y,n,a,q,?$BLACK])? " choice
+        case $choice in
+            [ynaq]) echo $choice; return ;;
+            ?) show_option_help;;
+        esac
+    done
+}
+
+function usage() {
+    cat <<EOM
+
+Recursively search and replace strings in files under \`dir\`
+
+Usage:
+    strreplace [OPTIONS] [dir] SEARCH_STRING REPLACEMENT
+
+Options:
+    -w      Match only whole words. Adds \b around the \`SEARCH_STRING\`
+    -i      Interactive. Ask for confirmation before each replacement.
+    -x      Exclude files matching the pattern (see grep --exclude)
+    -X      Exclude directories matching the pattern (see grep --exclude-dir)
+    -C      Disable colors (might be required in dark mode)
+    -h      Show this help
+
+EOM
+}
+
+match_words=0
+interactive=0
+exclude_file_pattern=
+exclude_dir_pattern=
+base_dir=$PWD
+single_file=
+color=1
+
+while getopts "hwix:X:C" opt; do
+    # echo "Option $opt args $OPTARG ind=$OPTIND"
+    case $opt in
+        h)  usage
+            exit 1
+            ;;
+        w)  match_words=1 ;;
+        i)  interactive=1 ;;
+        x)  exclude_file_pattern=${OPTARG} ;;
+        X)  exclude_dir_pattern=${OPTARG} ;;
+        C)  color=0 ;;
+    esac
+done
+
+if [[ $color -eq 0 ]]; then
+    RED=
+    BLACK=
+    BLUE=
+    BOLD_BLUE=
+    COLOR_RESET=
+fi
+
+# TODO check why OPTIND-1 is required
+shift $(($OPTIND-1))
+
+if [[ $# -eq 3 ]]; then
+    d=$1
+    if [ ! -e $d ]; then
+        echo "File/directory not found: $d"
+        exit 1
+    fi
+    if [ -f $d ]; then
+        single_file=$d
+    fi
+    if [ -d $d ]; then
+        base_dir=$d
+    fi
+    search_word=$2
+    replace_word=$3
+elif [[ $# -eq 2 ]]; then
+    search_word=$1
+    replace_word=$2
+else
+    echo "Expected two or three arguments, received $# ($@)"
+    usage
+    exit 1
+fi
+
+if [ "x$single_file" != "x" ]; then
+    files_to_check=$single_file
+else
+    files_to_check=`find_files`
+fi
+
+file_count=0
+match_count=0
+replace_count=0
+
+s=$search_word
+[ $match_words == 1 ] && s="\b$search_word\b"
+for file in $files_to_check; do
+    file_count=$(($file_count+1))
+    lines=`egrep -n $s $file | cut -d: -f1 | sort | uniq`
+    file_match_count=`echo "$lines" | wc -w`
+    file_skip_count=0
+    file_replace_count=0
+    match_count=$(($match_count + $file_match_count))
+    if [ $interactive == 0 ]; then
+        sed -i "s/$s/$replace_word/g" $file
+        replace_count=$(($replace_count+$file_match_count))
+    else
+        for line in $lines; do
+            first_line=$((line-2))
+            last_line=$((line+2))
+            echo -e "$BOLD_BLACK$file$RED:$line$BLACK"
+            sed -n "${first_line},${last_line}p" $file | \egrep -A2 -B2 --color=auto $s
+            option=`read_option`
+            case $option in
+                q)  exit 1 ;;
+                n)  file_skip_count=$(($file_skip_count+1))
+                    continue ;;
+                y)  sed -i "${line},${line}s/$s/$replace_word/g" $file
+                    file_replace_count=$(($file_replace_count+1))
+                    ;;
+                a)  sed -i "${line},\$s/$s/$replace_word/g" $file
+                    file_handled=$(($file_skip_count+$file_replace_count))
+                    file_remaining=$(($file_match_count-$file_handled))
+                    file_replace_count=$(($file_replace_count+$file_remaining))
+                    break
+                    ;;
+            esac
+        done
+        replace_count=$(($replace_count+$file_replace_count))
+    fi
+done
+
+echo "Replaced $replace_count/$match_count lines from $file_count files"
+
