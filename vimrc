@@ -28,6 +28,8 @@ autocmd FileType javascript setlocal shiftwidth=2 tabstop=2
 autocmd FileType css setlocal shiftwidth=2 tabstop=2
 autocmd FileType make set noexpandtab
 autocmd FileType jade setlocal shiftwidth=2 tabstop=2
+autocmd FileType typescript setlocal re=2
+autocmd FileType typescriptreact setlocal re=2
 
 " Highlight trailing whitespace
 highlight trailingspace ctermbg=grey guibg=grey
