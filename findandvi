@@ -9,12 +9,20 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-if [ $# -gt 1 ]; then
+if [ $# -eq 2 ]; then
+    root=$1
+    name=$2
+else
+    root=$PWD
+    name=$1
+fi
+
+if [ $# -gt 2 ]; then
     echo Multiple inputs received: $@
     exit 1
 fi
 
-files=`find . -type f -iname "*$1*"`
+files=`find $root -type f -iname "*$name*"`
 count=`echo $files | wc -w`
 
 if [ $count == "0" ]; then
