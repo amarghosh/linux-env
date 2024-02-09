@@ -51,6 +51,8 @@ imap <F8>	<Esc>	:tabnext		<CR>i
 nmap <C-n>			:tabnew			<CR>
 imap <C-n> <Esc>	:tabnew			<CR>
 
+nmap <F10> :tab split<CR>:exec("cs find c ".expand("<cword>")) <CR>
+
 set viminfo='20,\"50	" read/write a .viminfo file, don't store more
 			" than 50 lines of registers
 set history=50		" keep 50 lines of command line history
