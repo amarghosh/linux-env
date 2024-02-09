@@ -99,10 +99,10 @@ if [[ $# -eq 3 ]]; then
     if [ -d $d ]; then
         base_dir=$d
     fi
-    search_word=$2
+    search_word="$2"
     replace_word=$3
 elif [[ $# -eq 2 ]]; then
-    search_word=$1
+    search_word="$1"
     replace_word=$2
 else
     echo "Expected two or three arguments, received $# ($@)"
@@ -120,7 +120,7 @@ file_count=0
 match_count=0
 replace_count=0
 
-s=$search_word
+s="$search_word"
 [ $match_words == 1 ] && s="\b$search_word\b"
 for file in $files_to_check; do
     file_count=$(($file_count+1))
