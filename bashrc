@@ -27,6 +27,7 @@ alias findfile="find . -iname "
 
 export EDITOR=vi
 export GREP_COLOR='2;32'
+export LESS="-FXRi --incsearch"
 set -o vi
 
 export PATH="$PATH:$HOME/bin"

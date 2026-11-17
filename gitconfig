@@ -8,6 +8,7 @@
 	lg2 = log --all --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(white)%ci %C(red)%an%C(bold green)%d%C(reset)'
 	lg3 = log --all --graph --decorate
 	lg4 = log --graph --oneline --decorate --format=format:'%C(yellow)%h %C(black)%s %C(white)%ci %C(red)%an%C(bold green)%d%C(reset)'
+	diffupstream = range-diff @{u}~1..@{u} HEAD~1..HEAD
 
 [push]
 	default = simple
