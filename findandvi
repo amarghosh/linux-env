@@ -1,61 +1,158 @@
 #!/bin/bash
 
-# find a file in pwd and start vi with it
+# Find a file by name pattern and open it in $EDITOR (default: vi).
+#
+# usage: findandvi [-g] [-a] [-d dir] pattern
+#        findandvi [-g] [-a] dir pattern
+#
+#   -d dir  directory to search (default: current directory)
+#   -g      git-only: tracked files only
+#           (falls back to find, with a warning, outside a git repo)
+#   -a      do not skip node_modules, build dirs etc. in find mode
+#
+# With several matches, uses fzf if installed, else a built-in
+# up/down menu (arrows or j/k, Enter to select, q/Esc to cancel).
+#
+# Compatible with bash 3.2 (macOS default).
 
-set -e
+usage() {
+    echo "usage: ${0##*/} [-g] [-a] [-d dir] pattern" >&2
+    echo "       ${0##*/} [-g] [-a] dir pattern" >&2
+    exit 1
+}
 
-if [ $# -eq 0 ]; then
-    echo No file specified
+git_only=0
+all=0
+root=""
+
+while getopts ":gad:h" opt; do
+    case $opt in
+        g) git_only=1 ;;
+        a) all=1 ;;
+        d) root=$OPTARG ;;
+        *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+case $# in
+    1) name=$1 ;;
+    2)
+        if [ -n "$root" ]; then
+            echo "Directory given twice (-d and positional)" >&2
+            exit 1
+        fi
+        root=$1
+        name=$2
+        ;;
+    *) usage ;;
+esac
+
+[ -z "$root" ] && root=$PWD
+if [ ! -d "$root" ]; then
+    echo "Not a directory: $root" >&2
     exit 1
 fi
+root=$(cd "$root" && pwd)
 
-if [ $# -eq 2 ]; then
-    root=$1
-    name=$2
+# ---- collect matches (paths relative to $root) -------------------------
+
+files=()
+
+if [ $git_only -eq 1 ] && ! git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Warning: $root is not in a git repo, using find" >&2
+    git_only=0
+fi
+
+if [ $git_only -eq 1 ]; then
+    shopt -s nocasematch
+    while IFS= read -r -d '' p; do
+        [[ ${p##*/} == *"$name"* ]] && [ -f "$root/$p" ] && files+=("$p")
+    done < <(git -C "$root" ls-files -z)
+    shopt -u nocasematch
 else
-    root=$PWD
-    name=$1
+    if [ $all -eq 1 ]; then
+        find_cmd=(find "$root" -type f -iname "*$name*" -print0)
+    else
+        find_cmd=(find "$root" -mindepth 1
+            \( -name .git -o -name node_modules -o -name build -o -name dist \
+               -o -name target -o -name __pycache__ -o -name .venv \) -prune
+            -o -type f -iname "*$name*" -print0)
+    fi
+    while IFS= read -r -d '' p; do
+        files+=("${p#"$root"/}")
+    done < <("${find_cmd[@]}" 2>/dev/null)
 fi
 
-if [ $# -gt 2 ]; then
-    echo Multiple inputs received: $@
+count=${#files[@]}
+if [ $count -eq 0 ]; then
+    echo "No such file" >&2
     exit 1
 fi
 
-files=`find $root -type f -iname "*$name*"`
-count=`echo $files | wc -w`
+# ---- choose --------------------------------------------------------------
 
-if [ $count == "0" ]; then
-    echo No such file
-    exit 1
-fi
+menu() {
+    local n=$count cur=0 top=0 h i key rest drawn=0
+    h=$(($(tput lines) - 3))
+    [ $h -gt 15 ] && h=15
+    [ $h -gt $n ] && h=$n
 
-if [ $count != "1" ]; then
-    echo Multiple files found: $count
-    i=1
-    for f in $files; do
-        echo "$i:   $f"
-        i=$(($i+1))
+    restore() { tput cnorm >/dev/tty; }
+    trap 'restore; exit 130' INT TERM
+    tput civis >/dev/tty
+    printf '%d matches in %s\n' "$n" "$root" >/dev/tty
+
+    while true; do
+        [ $cur -lt $top ] && top=$cur
+        [ $cur -ge $((top + h)) ] && top=$((cur - h + 1))
+        if [ $drawn -eq 1 ]; then
+            printf '\033[%dA' $((h + 1)) >/dev/tty
+        fi
+        drawn=1
+        for ((i = top; i < top + h; i++)); do
+            if [ $i -eq $cur ]; then
+                printf '\r\033[K\033[7m> %s\033[0m\n' "${files[$i]}" >/dev/tty
+            else
+                printf '\r\033[K  %s\n' "${files[$i]}" >/dev/tty
+            fi
+        done
+        printf '\r\033[K[%d/%d] up/down, Enter=open, q=cancel\n' $((cur + 1)) "$n" >/dev/tty
+
+        IFS= read -rsn1 key </dev/tty
+        if [ "$key" = $'\033' ]; then
+            rest=""
+            IFS= read -rsn2 -t 1 rest </dev/tty
+            case $rest in
+                '[A') key=up ;;
+                '[B') key=down ;;
+                *) key=quit ;;
+            esac
+        fi
+        case $key in
+            up | k) [ $cur -gt 0 ] && cur=$((cur - 1)) ;;
+            down | j) [ $cur -lt $((n - 1)) ] && cur=$((cur + 1)) ;;
+            '') break ;;
+            q | quit) cur=-1; break ;;
+        esac
     done
-    echo "Enter your choice (or an invalid input to cancel): "
-    read choice
-    re='^[0-9]+$'
-    if ! [[ $choice =~ $re ]]; then
-        exit 1
-    fi
-    if [ $choice -lt 1 -o $choice -gt $count ]; then
-        exit 1
-    fi
-    choice=$(($choice-1))
-    arr=($files)
-    file=${arr[$choice]}
+
+    # clear the menu, restore cursor
+    printf '\033[%dA\033[J' $((h + 2)) >/dev/tty
+    restore
+    trap - INT TERM
+    [ $cur -ge 0 ] && choice=${files[$cur]}
+}
+
+choice=""
+if [ $count -eq 1 ]; then
+    choice=${files[0]}
+elif command -v fzf >/dev/null 2>&1; then
+    choice=$(printf '%s\0' "${files[@]}" | fzf --read0 --height 40% --reverse)
 else
-    file=$files
+    menu
 fi
 
-echo $file
+[ -z "$choice" ] && exit 1
 
-TTY=`tty`
-
-vi $file <$TTY >$TTY
-
+${EDITOR:-vi} -- "$root/$choice"

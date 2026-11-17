@@ -4,28 +4,38 @@ Basic config files, scripts and aliases that would make it easier to work with t
 ## Usage
 
 ### findandvi
-Use this to quickly open a file in vi even if you are not sure of the path.
+Use this to quickly open a file in your editor (`$EDITOR`, default `vi`) even if you are not sure of the path.
 
 ``` bash
-findandvi [path] part_of_the_file_name
+findandvi [-g] [-a] [-d dir] pattern
+findandvi [-g] [-a] dir pattern
 ```
-If `path` is omitted, it defaults to the current directory. Here is a simple command that opens the file matching `"*test.c*"` somewhere under the current directory
+Options:
+
+- `-d dir`: directory to search. Defaults to the current directory. The positional `dir` form is equivalent, but giving both is an error.
+- `-g`: git-only. Searches tracked files (`git ls-files`). Outside a git repo it prints a warning and falls back to `find`.
+- `-a`: in `find` mode, do not skip `.git`, `node_modules`, `build`, `dist`, `target`, `__pycache__` and `.venv`, which are skipped by default.
+
+Matching is case-insensitive on the file name. Names containing spaces are handled. Here is a simple command that opens the file matching `"*test.c*"` somewhere under the current directory
 ``` bash
 findandvi test.c
 ```
-This uses `find . -iname "*test.c*"` to find the file to edit. This can take a while if there are too many files under the current directory. You can use the optional `path` argument to improve this. Following example looks for test.c within a specific directory under the current directory
+This can take a while if there are too many files under the current directory. Use `-d` (or the positional `dir`) or `-g` to narrow the search. Following example looks for test.c within a specific directory
 ``` bash
+findandvi -d packages/multimedia test.c
 findandvi packages/multimedia test.c
 ```
-If there are multiple files matching the search keyword, it will list all the files and let you select the desired file.
+If there are multiple matches, you pick one with `fzf` if it is installed. Otherwise a built-in menu is shown. Use the up/down arrows or `j`/`k` to move, Enter to open and `q` or Esc to cancel.
 ``` bash
 $ findandvi flutter/dev/docs yaml
-Multiple files found: 3
-1:   flutter/dev/docs/platform_integration/pubspec.yaml
-2:   flutter/dev/docs/analysis_options.yaml
-3:   flutter/dev/docs/dartdoc_options.yaml
-Enter your choice (or an invalid input to cancel): 
+3 matches in /home/me/flutter/dev/docs
+> platform_integration/pubspec.yaml
+  analysis_options.yaml
+  dartdoc_options.yaml
+[1/3] up/down, Enter=open, q=cancel
 ```
+The script works with bash 3.2 (the macOS default).
+
 ### strreplace
 ``` bash
 Recursively search and replace strings in files under `dir`
