@@ -34,6 +34,8 @@ $ findandvi flutter/dev/docs yaml
   dartdoc_options.yaml
 [1/3] up/down, Enter=open, q=cancel
 ```
+Before the editor starts, the selected file's path (relative to the search directory) is printed, so it stays in your scrollback after you quit.
+
 The script works with bash 3.2 (the macOS default).
 
 ### strreplace

@@ -93,12 +93,13 @@ fi
 # ---- choose --------------------------------------------------------------
 
 menu() {
-    local n=$count cur=0 top=0 h i key rest drawn=0
+    local n=$count cur=0 top=0 h i key rest drawn=0 saved_stty
+    saved_stty=$(stty -g </dev/tty)
     h=$(($(tput lines) - 3))
     [ $h -gt 15 ] && h=15
     [ $h -gt $n ] && h=$n
 
-    restore() { tput cnorm >/dev/tty; }
+    restore() { stty "$saved_stty" </dev/tty; tput cnorm >/dev/tty; }
     trap 'restore; exit 130' INT TERM
     tput civis >/dev/tty
     printf '%d matches in %s\n' "$n" "$root" >/dev/tty
@@ -155,4 +156,5 @@ fi
 
 [ -z "$choice" ] && exit 1
 
+echo "$choice"
 ${EDITOR:-vi} -- "$root/$choice"
